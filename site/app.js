@@ -353,7 +353,7 @@
     var q = [];
     ds.forEach(function (d) { d.legend.forEach(function (l) { q.push({ img: d.img, title: d.title, n: l.n, label: l.label }); }); });
     PQUIZ = { queue: shuffle(q), i: 0, revealed: false, answer: "", hit: 0, miss: 0, scope: scope };
-    if ((location.hash || "").indexOf("diagrams") < 0) location.hash = "#/diagrams";
+    if ((location.hash || "").indexOf("truck") < 0 && (location.hash || "").indexOf("diagrams") < 0) location.hash = "#/truck";
     else renderDiagrams();
   }
   function drawPictureQuiz() {
@@ -586,11 +586,11 @@
   // =====================================================================
   // ROUTER
   // =====================================================================
-  var ROUTES = { learn: renderLearn, diagrams: renderDiagrams, quiz: renderQuiz, walk: renderWalk, examiner: renderExaminer, progress: renderProgress };
+  var ROUTES = { truck: renderDiagrams, diagrams: renderDiagrams, learn: renderLearn, quiz: renderQuiz, walk: renderWalk, examiner: renderExaminer, progress: renderProgress };
   function route() {
     if (TIMER && !(RUN && (location.hash.indexOf("walk") >= 0 || location.hash.indexOf("examiner") >= 0))) endRun();
-    var name = (location.hash.replace(/^#\//, "") || "learn").split("/")[0];
-    if (!ROUTES[name]) name = "learn";
+    var name = (location.hash.replace(/^#\//, "") || "truck").split("/")[0];
+    if (!ROUTES[name]) name = "truck";
     document.querySelectorAll("#nav a").forEach(function (a) { a.classList.toggle("active", a.getAttribute("data-route") === name); });
     ROUTES[name]();
   }
@@ -598,6 +598,6 @@
 
   // ---------- boot ----------------------------------------------------------
   document.getElementById("foot-count").textContent = ITEMS.length + " items · 6 sections";
-  if (!location.hash) location.hash = "#/learn";
+  if (!location.hash) location.hash = "#/truck";
   route();
 })();
