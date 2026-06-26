@@ -1,0 +1,85 @@
+# CDL Pretrip — static study app on the forge cluster.
+#
+# Build + push (on forge; no passwordless sudo there, so GHCR not ctr-import):
+#   docker build -t ghcr.io/kardolus/cdl-web:v1 .
+#   docker push ghcr.io/kardolus/cdl-web:v1
+#
+# One-time cluster setup (from the Mac, kubectl --context forge):
+#   kubectl create namespace cdl
+#   kubectl -n cdl create secret docker-registry ghcr-pull \
+#     --docker-server=ghcr.io --docker-username=kardolus --docker-password="$GITHUB_API_KEY"
+#   kubectl apply -f deploy/k8s/cdl-pretrip.yaml
+#
+# The public hostname cdl.kardol.us is served via the `platform` Cloudflare tunnel
+# (ingress already routes */80 to ingress-nginx) + a proxied CNAME `cdl`.
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cdl
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cdl-web
+  namespace: cdl
+  labels: {app: cdl-web}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: cdl-web}
+  template:
+    metadata:
+      labels: {app: cdl-web}
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull
+      containers:
+        - name: cdl-web
+          image: ghcr.io/kardolus/cdl-web:v1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - {containerPort: 80, name: http}
+          readinessProbe:
+            httpGet: {path: /, port: 80}
+            initialDelaySeconds: 3
+            periodSeconds: 15
+          livenessProbe:
+            httpGet: {path: /, port: 80}
+            initialDelaySeconds: 5
+            periodSeconds: 20
+          resources:
+            requests: {cpu: 10m, memory: 16Mi}
+            limits: {memory: 64Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cdl-web
+  namespace: cdl
+  labels: {app: cdl-web}
+spec:
+  selector: {app: cdl-web}
+  ports:
+    - {name: http, port: 80, targetPort: 80}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cdl-web
+  namespace: cdl
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: cdl.kardol.us
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: cdl-web
+                port: {number: 80}

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f8f9fa" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)">
+<title>CDL Pretrip — NY Class A inspection trainer</title>
+<meta name="description" content="Gamified study trainer for the New York CDL Class A pre-trip vehicle inspection skills test. Learn every component, drill the two-conditions rule, run the walk-around, and survive the examiner.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css?v=1">
+<script>
+  // apply saved theme before paint to avoid a flash
+  if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
+  function toggleDark(){
+    document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+  }
+</script>
+<script defer src="https://analytics.kardol.us/script.js" data-website-id="a7294f2f-bcfb-4d5f-b50b-d7046a86c35c"></script>
+</head>
+<body>
+<div class="top-bar">
+  <div class="brand" onclick="location.hash='#/learn'" title="CDL Pretrip">
+    <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M1 4h13v11H1z"/><path d="M14 8h4l3 3v4h-7z"/><circle cx="6" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/>
+    </svg>
+    CDL&nbsp;Pretrip
+  </div>
+  <div class="top-actions">
+    <nav class="top-nav" id="nav">
+      <a href="#/learn"    data-route="learn">Learn</a>
+      <a href="#/quiz"     data-route="quiz">Quiz</a>
+      <a href="#/walk"     data-route="walk">Walk-Around</a>
+      <a href="#/examiner" data-route="examiner">Examiner</a>
+      <a href="#/progress" data-route="progress">Progress</a>
+    </nav>
+    <button class="dark-toggle" onclick="toggleDark()" title="Toggle dark mode" aria-label="Toggle dark mode">◐</button>
+  </div>
+</div>
+
+<main id="app"><!-- rendered by app.js --></main>
+
+<footer class="foot">
+  <span class="meta">NY CDL Class A pre-trip trainer · content from your own Notion script · all progress stays in this browser</span>
+  <span class="meta mono" id="foot-count"></span>
+</footer>
+
+<script src="/data.js?v=1"></script>
+<script src="/app.js?v=1"></script>
+</body>
+</html>
