@@ -17,7 +17,7 @@ Part C trailer) grouped under the three exam "parts" (Cab / Tractor / Trailer).
   *mastered* (hidden) or *parked*; filter by Due / Weak / Critical. A spaced-repetition
   (Leitner) engine schedules reviews behind the scenes. Sections show inline thumbnails of
   the relevant diagrams.
-- **Diagrams** — a picture dictionary of 12 labeled walk-around plates from the
+- **Diagrams** — a picture dictionary of 14 labeled plates (12 from the manual + 2 schematic trailer views) from the
   International Prostar manual (engine compartments, both wheel ends, under-vehicle, rear,
   fifth-wheel/coupling, dash). Tap a plate for its numbered legend, or take the **Picture
   quiz**: shown a diagram, name the part at callout #N. Great for visual learners.

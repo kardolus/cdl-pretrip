@@ -107,7 +107,7 @@
       '<div class="lb-side"><button class="lb-close" aria-label="Close">×</button>' +
       '<span class="part-tag">' + esc(secById[d.section].part) + '</span>' +
       "<h2>" + esc(d.title) + "</h2>" +
-      '<div class="meta">' + esc(secById[d.section].title) + "</div>" +
+      '<div class="meta">' + esc(secById[d.section].title) + (d.schematic ? " · schematic" : "") + "</div>" +
       '<ul class="legend">' + legend + "</ul>" +
       '<div class="row" style="margin-top:18px"><button class="btn primary" data-pq="' + d.id + '">Quiz this diagram</button></div>' +
       "</div></div>";
