@@ -19,8 +19,10 @@ html.dark{
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{font-family:var(--font-body);max-width:1000px;margin:0 auto;padding:0 20px 60px;
-  background:var(--bg);color:var(--fg);transition:background .2s,color .2s;line-height:1.55}
+body{font-family:var(--font-body);max-width:1000px;margin:0 auto;padding:0 16px 60px;
+  background:var(--bg);color:var(--fg);transition:background .2s,color .2s;line-height:1.55;overflow-wrap:break-word}
+img{max-width:100%}
+.cond,.item-name,.prompt,.qcard .loc{overflow-wrap:anywhere}
 h1,h2,h3{font-family:var(--font-ui);margin:0}
 a{color:var(--accent);text-decoration:none}
 a:hover{text-decoration:underline}
@@ -29,23 +31,24 @@ a:hover{text-decoration:underline}
 .mono{font-family:var(--font-mono)}
 .muted{color:var(--meta)}
 
-/* top nav (flightdeck pattern) */
-.top-bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
-  gap:12px;padding:12px 0;margin-bottom:8px;background:color-mix(in srgb,var(--bg) 86%,transparent);
-  backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
-.brand{font-family:var(--font-ui);font-weight:700;font-size:16px;display:flex;align-items:center;gap:9px;cursor:pointer}
+/* top nav (flightdeck pattern) — stacked: utility row + nav row */
+.top-bar{position:sticky;top:0;z-index:20;padding:10px 0 0;margin-bottom:8px;
+  background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+.top-utility{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0}
+.brand{font-family:var(--font-ui);font-weight:700;font-size:16px;display:flex;align-items:center;gap:9px;cursor:pointer;min-width:0}
 .brand .logo{width:24px;height:24px;color:var(--accent);flex-shrink:0;transition:transform .4s cubic-bezier(.2,.8,.2,1)}
 .brand:hover .logo{transform:rotate(-8deg) scale(1.06)}
-.top-actions{display:flex;align-items:center;gap:6px}
-.top-nav{display:flex;gap:2px}
+/* nav row: horizontally scrollable on narrow screens so it never widens the page */
+.top-nav{display:flex;gap:2px;margin-top:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.top-nav::-webkit-scrollbar{display:none}
 .top-nav a{font-family:var(--font-ui);font-size:14px;font-weight:500;padding:6px 10px;color:var(--meta);
-  border-bottom:2px solid transparent;border-radius:var(--radius-sm)}
+  border-bottom:2px solid transparent;border-radius:var(--radius-sm);white-space:nowrap;flex:0 0 auto}
 .top-nav a:hover{color:var(--fg);text-decoration:none;background:var(--btn-hover)}
 .top-nav a.active{color:var(--fg);border-bottom-color:var(--accent)}
 .dark-toggle{background:none;border:1px solid var(--ctrl-border);border-radius:var(--radius-sm);cursor:pointer;
-  font-size:16px;line-height:1;padding:5px 9px;color:var(--fg)}
+  font-size:16px;line-height:1;padding:5px 9px;color:var(--fg);flex-shrink:0}
 .dark-toggle:hover{background:var(--btn-hover)}
-@media(max-width:680px){.top-nav a{padding:6px 7px;font-size:13px}.brand{font-size:14px}}
+@media(max-width:680px){.top-nav a{padding:6px 9px;font-size:13px}.brand{font-size:15px}}
 
 /* generic buttons / controls */
 .btn{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-ui);font-size:13px;font-weight:600;

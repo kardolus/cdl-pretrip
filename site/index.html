@@ -22,7 +22,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/style.css?v=2">
+<link rel="stylesheet" href="/style.css?v=3">
 <script>
   // apply saved theme before paint to avoid a flash
   if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
@@ -35,23 +35,23 @@
 </head>
 <body>
 <div class="top-bar">
-  <div class="brand" onclick="location.hash='#/learn'" title="CDL Pretrip">
-    <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M1 4h13v11H1z"/><path d="M14 8h4l3 3v4h-7z"/><circle cx="6" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/>
-    </svg>
-    CDL&nbsp;Pretrip
-  </div>
-  <div class="top-actions">
-    <nav class="top-nav" id="nav">
-      <a href="#/truck"    data-route="truck">Truck</a>
-      <a href="#/learn"    data-route="learn">Learn</a>
-      <a href="#/quiz"     data-route="quiz">Quiz</a>
-      <a href="#/walk"     data-route="walk">Walk-Around</a>
-      <a href="#/examiner" data-route="examiner">Examiner</a>
-      <a href="#/progress" data-route="progress">Progress</a>
-    </nav>
+  <div class="top-utility">
+    <div class="brand" onclick="location.hash='#/truck'" title="CDL Pretrip">
+      <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M1 4h13v11H1z"/><path d="M14 8h4l3 3v4h-7z"/><circle cx="6" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/>
+      </svg>
+      CDL&nbsp;Pretrip
+    </div>
     <button class="dark-toggle" onclick="toggleDark()" title="Toggle dark mode" aria-label="Toggle dark mode">◐</button>
   </div>
+  <nav class="top-nav" id="nav">
+    <a href="#/truck"    data-route="truck">Truck</a>
+    <a href="#/learn"    data-route="learn">Learn</a>
+    <a href="#/quiz"     data-route="quiz">Quiz</a>
+    <a href="#/walk"     data-route="walk">Walk-Around</a>
+    <a href="#/examiner" data-route="examiner">Examiner</a>
+    <a href="#/progress" data-route="progress">Progress</a>
+  </nav>
 </div>
 
 <main id="app"><!-- rendered by app.js --></main>
