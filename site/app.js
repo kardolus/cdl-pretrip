@@ -12,6 +12,12 @@
   SEC.forEach(function (s) { secById[s.id] = s; });
   var PARTS = ["Cab", "Tractor", "Trailer"];
 
+  // picture-dictionary diagrams (window.PRETRIP_DIAGRAMS from diagrams.js)
+  var DIAGRAMS = window.PRETRIP_DIAGRAMS || [];
+  var diagramsBySection = {};
+  DIAGRAMS.forEach(function (d) { (diagramsBySection[d.section] = diagramsBySection[d.section] || []).push(d); });
+  function diagramById(id) { return DIAGRAMS.find(function (d) { return d.id === id; }); }
+
   // ---------- store ---------------------------------------------------------
   var KEY = "pretrip.v1";
   var INTERVALS = [0, 1, 2, 4, 7, 14]; // days, indexed by mastery level
@@ -89,6 +95,31 @@
   // ---------- icons ---------------------------------------------------------
   function dotClass(id) { return "dot m" + prog(id).mastery; }
 
+  // ---------- diagram lightbox ----------------------------------------------
+  function openLightbox(id) {
+    var d = diagramById(id); if (!d) return;
+    closeLightbox();
+    var legend = d.legend.map(function (l) { return '<li><span class="num">' + l.n + '</span><span>' + esc(l.label) + "</span></li>"; }).join("");
+    var lb = document.createElement("div");
+    lb.className = "lb"; lb.id = "lightbox";
+    lb.innerHTML = '<div class="lb-win">' +
+      '<div class="lb-img"><img src="' + d.img + '" alt="' + esc(d.title) + '"></div>' +
+      '<div class="lb-side"><button class="lb-close" aria-label="Close">×</button>' +
+      '<span class="part-tag">' + esc(secById[d.section].part) + '</span>' +
+      "<h2>" + esc(d.title) + "</h2>" +
+      '<div class="meta">' + esc(secById[d.section].title) + "</div>" +
+      '<ul class="legend">' + legend + "</ul>" +
+      '<div class="row" style="margin-top:18px"><button class="btn primary" data-pq="' + d.id + '">Quiz this diagram</button></div>' +
+      "</div></div>";
+    document.body.appendChild(lb);
+    lb.addEventListener("click", function (e) { if (e.target === lb) closeLightbox(); });
+    lb.querySelector(".lb-close").addEventListener("click", closeLightbox);
+    lb.querySelector("[data-pq]").addEventListener("click", function () { closeLightbox(); startPictureQuiz(d.id); });
+    document.addEventListener("keydown", lbEsc);
+  }
+  function lbEsc(e) { if (e.key === "Escape") closeLightbox(); }
+  function closeLightbox() { var x = document.getElementById("lightbox"); if (x) x.remove(); document.removeEventListener("keydown", lbEsc); }
+
   // =====================================================================
   // LEARN
   // =====================================================================
@@ -131,6 +162,12 @@
       html += '<div class="sec"><div class="sec-head"><span class="part-tag">' + esc(s.part) + '</span><h2>' + esc(s.title) + '</h2>';
       html += '<span class="count">' + mastered + "/" + all.length + " mastered</span></div>";
       html += '<div class="bar"><i style="width:' + pct + '%"></i></div>';
+      var diags = diagramsBySection[s.id] || [];
+      if (diags.length) {
+        html += '<div class="diag-strip">' + diags.map(function (d) {
+          return '<span class="diag-chip" data-diag="' + d.id + '"><img src="' + d.img + '" alt=""> ' + esc(d.title) + "</span>";
+        }).join("") + "</div>";
+      }
       var curGroup = null;
       items.forEach(function (i) {
         if (i.group !== curGroup) { curGroup = i.group; html += '<div class="grp-label">' + esc(i.group) + "</div>"; }
@@ -146,6 +183,7 @@
       var hm = document.getElementById("hm"); if (hm) hm.addEventListener("change", function () { st.hideMastered = this.checked; save(); renderLearn(); });
       var sp = document.getElementById("sp"); if (sp) sp.addEventListener("change", function () { st.showParked = this.checked; save(); renderLearn(); });
       var sc = document.getElementById("spotcheck"); if (sc) sc.addEventListener("click", function () { startQuiz("mastered"); });
+      on(".diag-chip", "click", function () { openLightbox(this.getAttribute("data-diag")); });
       bindItemRows();
     });
   }
@@ -286,6 +324,73 @@
     mount(html, function () { on("[data-q]", "click", function () { startQuiz(this.getAttribute("data-q")); }); });
   }
   function kpi(n, l) { return '<div class="score-kpi"><div class="n">' + n + '</div><div class="l">' + l + "</div></div>"; }
+
+  // =====================================================================
+  // DIAGRAMS (picture dictionary) + Picture quiz
+  // =====================================================================
+  var PQUIZ = null;
+  function renderDiagrams() {
+    if (PQUIZ) { drawPictureQuiz(); return; }
+    var html = '<div class="page-head"><h1>Picture dictionary</h1><p>Labeled walk-around diagrams from the International Prostar manual. Tap a plate to see its parts; or quiz yourself — name the numbered callout.</p></div>';
+    html += '<div class="row"><button class="btn primary" id="pq-all">Quiz me on the diagrams</button></div>';
+    // group the gallery by exam part
+    PARTS.forEach(function (part) {
+      var ds = DIAGRAMS.filter(function (d) { return secById[d.section].part === part; });
+      if (!ds.length) return;
+      html += '<div class="grp-label" style="margin-top:20px">' + esc(part) + "</div>";
+      html += '<div class="diag-gallery">' + ds.map(function (d) {
+        return '<div class="diag-card" data-diag="' + d.id + '"><div class="thumb"><img src="' + d.img + '" alt="' + esc(d.title) + '" loading="lazy"></div>' +
+          '<div class="cap"><h3>' + esc(d.title) + '</h3><div class="meta">' + d.legend.length + " labeled parts · " + esc(secById[d.section].title) + "</div></div></div>";
+      }).join("") + "</div>";
+    });
+    mount(html, function () {
+      on(".diag-card", "click", function () { openLightbox(this.getAttribute("data-diag")); });
+      document.getElementById("pq-all").addEventListener("click", function () { startPictureQuiz("all"); });
+    });
+  }
+  function startPictureQuiz(scope) {
+    var ds = scope === "all" ? DIAGRAMS : [diagramById(scope)];
+    var q = [];
+    ds.forEach(function (d) { d.legend.forEach(function (l) { q.push({ img: d.img, title: d.title, n: l.n, label: l.label }); }); });
+    PQUIZ = { queue: shuffle(q), i: 0, revealed: false, answer: "", hit: 0, miss: 0, scope: scope };
+    if ((location.hash || "").indexOf("diagrams") < 0) location.hash = "#/diagrams";
+    else renderDiagrams();
+  }
+  function drawPictureQuiz() {
+    if (PQUIZ.i >= PQUIZ.queue.length) {
+      var html = '<div class="page-head"><h1>Picture quiz complete</h1></div><div class="scorecard"><div class="score-grid">' +
+        kpi(PQUIZ.hit, "Knew it") + kpi(PQUIZ.miss, "Missed") + kpi(PQUIZ.queue.length, "Total") + "</div>" +
+        '<div class="row"><button class="btn primary" id="pq-again">Again</button><button class="btn" id="pq-back">Back to diagrams</button></div></div>';
+      mount(html, function () {
+        document.getElementById("pq-again").addEventListener("click", function () { startPictureQuiz(PQUIZ.scope); });
+        document.getElementById("pq-back").addEventListener("click", function () { PQUIZ = null; renderDiagrams(); });
+      });
+      return;
+    }
+    var c = PQUIZ.queue[PQUIZ.i];
+    var html = '<div class="page-head"><h1>Picture quiz</h1><p class="meta">' + (PQUIZ.i + 1) + " / " + PQUIZ.queue.length + " · " + esc(c.title) + "</p></div>";
+    html += '<div class="qcard"><div class="loc">' + esc(c.title) + '</div><div class="prompt">What is part #' + c.n + "?</div>";
+    html += '<div class="diag-stage"><img src="' + c.img + '" alt="' + esc(c.title) + '"></div>';
+    html += '<textarea id="pans" placeholder="Name the part at callout #' + c.n + '…" ' + (PQUIZ.revealed ? "disabled" : "") + ">" + esc(PQUIZ.answer) + "</textarea>";
+    if (!PQUIZ.revealed) {
+      html += '<div class="grade-row"><button class="btn primary" id="preveal">Reveal</button><button class="btn" id="pskip">Skip</button></div>';
+    } else {
+      var ok = condHit(c.label, PQUIZ.answer);
+      html += '<div class="reveal"><div class="lbl">Part #' + c.n + ' is</div><div class="conds"><span class="cond ' + (ok ? "hit" : "") + '">' + esc(c.label) + "</span></div></div>";
+      html += '<div class="grade-row"><button class="btn good" data-pg="hit">✓ Knew it</button><button class="btn bad" data-pg="miss">✗ Missed</button></div>';
+    }
+    html += "</div>";
+    html += '<div class="row" style="margin-top:8px"><button class="btn sm" id="pq-quit">Quit</button></div>';
+    mount(html, function () {
+      var ta = document.getElementById("pans");
+      var rv = document.getElementById("preveal"); if (rv) rv.addEventListener("click", function () { PQUIZ.answer = ta.value; PQUIZ.revealed = true; drawPictureQuiz(); });
+      var sk = document.getElementById("pskip"); if (sk) sk.addEventListener("click", pnext);
+      on("[data-pg]", "click", function () { PQUIZ[this.getAttribute("data-pg")]++; pnext(); });
+      document.getElementById("pq-quit").addEventListener("click", function () { PQUIZ = null; renderDiagrams(); });
+      if (ta && !PQUIZ.revealed) ta.focus();
+    });
+    function pnext() { PQUIZ.i++; PQUIZ.revealed = false; PQUIZ.answer = ""; drawPictureQuiz(); }
+  }
 
   // =====================================================================
   // RUNNER (Walk-Around + Examiner)
@@ -481,7 +586,7 @@
   // =====================================================================
   // ROUTER
   // =====================================================================
-  var ROUTES = { learn: renderLearn, quiz: renderQuiz, walk: renderWalk, examiner: renderExaminer, progress: renderProgress };
+  var ROUTES = { learn: renderLearn, diagrams: renderDiagrams, quiz: renderQuiz, walk: renderWalk, examiner: renderExaminer, progress: renderProgress };
   function route() {
     if (TIMER && !(RUN && (location.hash.indexOf("walk") >= 0 || location.hash.indexOf("examiner") >= 0))) endRun();
     var name = (location.hash.replace(/^#\//, "") || "learn").split("/")[0];

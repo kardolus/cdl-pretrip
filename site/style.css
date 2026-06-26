@@ -183,6 +183,52 @@ html.dark .chip.on{color:#0d1117}
   border-radius:var(--radius-sm);background:var(--card);color:var(--fg)}
 .weak a:hover{text-decoration:none;border-color:var(--accent)}
 
+/* picture dictionary — gallery */
+.diag-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin:16px 0}
+.diag-card{border:1px solid var(--border);border-radius:var(--radius-md);background:var(--card);overflow:hidden;
+  cursor:pointer;transition:transform .15s,border-color .15s,box-shadow .15s;display:flex;flex-direction:column}
+.diag-card:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 8px 22px rgba(0,0,0,.12)}
+.diag-card .thumb{background:#fff;aspect-ratio:3/2;display:grid;place-items:center;overflow:hidden;border-bottom:1px solid var(--border)}
+.diag-card .thumb img{width:100%;height:100%;object-fit:contain;padding:8px}
+.diag-card .cap{padding:11px 14px}
+.diag-card .cap h3{font-size:14.5px}
+.diag-card .cap .meta{margin-top:3px}
+
+/* inline diagram thumbnails on Learn section headers */
+.diag-strip{display:flex;flex-wrap:wrap;gap:10px;margin:4px 0 6px}
+.diag-chip{display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:999px;
+  background:var(--card);padding:4px 12px 4px 4px;cursor:pointer;font-family:var(--font-ui);font-size:12.5px;
+  font-weight:600;color:var(--fg);transition:border-color .15s}
+.diag-chip:hover{border-color:var(--accent)}
+.diag-chip img{width:34px;height:26px;object-fit:contain;background:#fff;border-radius:5px;padding:1px}
+
+/* lightbox */
+.lb[hidden]{display:none}
+.lb{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;
+  background:rgba(0,0,0,.82);animation:fmin .18s ease}
+.lb-win{background:var(--bg);border:1px solid var(--border-strong);border-radius:var(--radius-lg);
+  max-width:min(1000px,96vw);max-height:92vh;overflow:auto;display:grid;grid-template-columns:1.5fr 1fr}
+.lb-img{background:#fff;display:grid;place-items:center;padding:14px;min-height:200px}
+.lb-img img{width:100%;height:auto;max-height:78vh;object-fit:contain}
+.lb-side{padding:20px 22px;position:relative;min-width:230px}
+.lb-side h2{font-size:18px;margin-bottom:2px}
+.lb-side .part-tag{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--accent);border:1px solid var(--accent);border-radius:5px;padding:1px 6px}
+.lb-close{position:absolute;top:12px;right:14px;background:none;border:none;color:var(--meta);font-size:24px;
+  line-height:1;cursor:pointer}
+.lb-close:hover{color:var(--fg)}
+.legend{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:7px}
+.legend li{display:flex;align-items:flex-start;gap:10px;font-size:13.5px}
+.legend .num{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;
+  font-family:var(--font-ui);font-weight:700;font-size:12px;display:grid;place-items:center}
+html.dark .legend .num{color:#0d1117}
+@media(max-width:680px){.lb-win{grid-template-columns:1fr}.lb-img img{max-height:46vh}}
+
+/* picture quiz stage */
+.diag-stage{background:#fff;border-radius:var(--radius-md);border:1px solid var(--border);margin-top:14px;
+  display:grid;place-items:center;padding:10px}
+.diag-stage img{width:100%;height:auto;max-height:42vh;object-fit:contain}
+
 .nudge{border:1px dashed var(--warn);background:color-mix(in srgb,var(--warn) 9%,transparent);border-radius:var(--radius-md);
   padding:12px 15px;margin:12px 0;font-size:13.5px;color:var(--fg);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .empty{color:var(--meta);font-size:14px;padding:30px 0;text-align:center}

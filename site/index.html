@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/style.css?v=1">
+<link rel="stylesheet" href="/style.css?v=2">
 <script>
   // apply saved theme before paint to avoid a flash
   if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
@@ -33,6 +33,7 @@
   <div class="top-actions">
     <nav class="top-nav" id="nav">
       <a href="#/learn"    data-route="learn">Learn</a>
+      <a href="#/diagrams" data-route="diagrams">Diagrams</a>
       <a href="#/quiz"     data-route="quiz">Quiz</a>
       <a href="#/walk"     data-route="walk">Walk-Around</a>
       <a href="#/examiner" data-route="examiner">Examiner</a>
@@ -49,7 +50,8 @@
   <span class="meta mono" id="foot-count"></span>
 </footer>
 
-<script src="/data.js?v=1"></script>
-<script src="/app.js?v=1"></script>
+<script src="/data.js?v=2"></script>
+<script src="/diagrams.js?v=1"></script>
+<script src="/app.js?v=2"></script>
 </body>
 </html>
