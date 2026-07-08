@@ -199,7 +199,7 @@
       on(".chip[data-filter]", "click", function () { var f = this.getAttribute("data-filter"); fl[f] = !fl[f]; st.filters = fl; save(); renderLearn(); });
       var hm = document.getElementById("hm"); if (hm) hm.addEventListener("change", function () { st.hideMastered = this.checked; save(); renderLearn(); });
       var sp = document.getElementById("sp"); if (sp) sp.addEventListener("change", function () { st.showParked = this.checked; save(); renderLearn(); });
-      var sc = document.getElementById("spotcheck"); if (sc) sc.addEventListener("click", function () { startQuiz("mastered"); });
+      var sc = document.getElementById("spotcheck"); if (sc) sc.addEventListener("click", function () { startQuiz(ITEMS.filter(function (i) { return masteryOf(i.id) >= 5; }).map(function (i) { return i.id; })); });
       on(".diag-chip", "click", function () { openLightbox(this.getAttribute("data-diag")); });
       bindItemRows();
     });
@@ -257,89 +257,134 @@
   // QUIZ
   // =====================================================================
   var QUIZ = null;
-  function startQuiz(source) {
-    var ids;
-    if (Array.isArray(source)) ids = source.slice();
-    else ids = quizQueue(source);
-    if (!ids.length) ids = ITEMS.map(function (i) { return i.id; });
-    QUIZ = { queue: shuffle(ids), i: 0, revealed: false, results: { nailed: 0, partial: 0, missed: 0 }, source: Array.isArray(source) ? "drill" : source };
-    location.hash = "#/quiz";
-    if ((location.hash || "").indexOf("quiz") >= 0) renderQuiz();
+  var QTYPE = { condition: "Identify the check", odd: "Odd one out", reverse: "Name the part",
+    order: "What comes next", section: "Where on the truck", critical: "Critical item",
+    diagram: "On the diagram", fact: "By the numbers" };
+  function quizCtx() {
+    return { items: ITEMS, sections: SEC, secById: secById, diagrams: DIAGRAMS,
+      diagramsBySection: diagramsBySection, masteryOf: masteryOf, dueOf: dueOf };
   }
-  function quizQueue(source) {
-    var pool = ITEMS;
-    if (source === "due") pool = ITEMS.filter(function (i) { return isDue(i.id); });
-    else if (source === "weak") pool = ITEMS.filter(function (i) { return prog(i.id).mastery <= 2; });
-    else if (source === "critical") pool = ITEMS.filter(function (i) { return i.critical; });
-    else if (source === "mastered") pool = shuffle(ITEMS.filter(function (i) { return isMastered(i.id); })).slice(0, 10);
-    else if (secById[source]) pool = ITEMS.filter(function (i) { return i.section === source; });
-    return pool.map(function (i) { return i.id; });
+  function scopeLabel(scope) {
+    if (secById[scope]) return secById[scope].title;
+    return ({ mixed: "Quick practice", weak: "Weak spots", critical: "Critical & numbers", numbers: "Numbers" }[scope] || "Quiz");
+  }
+  function startQuiz(spec) {
+    var opts;
+    if (Array.isArray(spec)) opts = { ids: spec.slice(), count: Math.min(Math.max(spec.length * 2, 4), 10), label: "Targeted drill" };
+    else if (typeof spec === "string") opts = { scope: spec, label: scopeLabel(spec) };
+    else opts = spec || {};
+    var scope = opts.scope || "mixed";
+    var gen = window.PRETRIP_QUIZGEN;
+    var count = opts.count || (scope === "numbers" ? gen.FACTS.length : 10);
+    var qs = gen.build(quizCtx(), { scope: scope, ids: opts.ids, count: count });
+    if (!qs.length) { QUIZ = null; renderQuizHub(); return; }
+    QUIZ = { questions: qs, i: 0, answered: false, chosen: -1, right: 0, wrong: 0, score: 0, streak: 0, best: 0, missed: [], label: opts.label || "Quiz", sprint: !!opts.sprint };
+    track("quiz_start", { scope: scope, sprint: !!opts.sprint, n: qs.length });
+    if ((location.hash || "").indexOf("quiz") < 0) location.hash = "#/quiz"; else renderQuizSession();
   }
 
-  function renderQuiz() {
-    if (!QUIZ) { renderQuizPicker(); return; }
-    if (QUIZ.i >= QUIZ.queue.length) { renderQuizDone(); return; }
-    var i = ITEMS.find(function (x) { return x.id === QUIZ.queue[QUIZ.i]; });
-    var sec = secById[i.section];
-    var hint = sec.type === "procedure"
-      ? "Recall this step in the sequence — what you do and the values to watch."
-      : (i.conditions.length ? "Say the item out loud, then name at least 2 conditions you check." : "Identify and name this item.");
-    var html = "";
-    html += '<div class="page-head"><h1>Quiz</h1><p class="meta">' + quizSourceLabel() + " · " + (QUIZ.i + 1) + " / " + QUIZ.queue.length + "</p></div>";
-    html += '<div class="qcard"><div class="loc">' + esc(sec.title) + " · " + esc(i.group) + "</div>";
-    html += '<div class="prompt">' + esc(i.name) + noteTag(i) + (i.critical ? '<span class="crit-flag">critical</span>' : "") + "</div>";
-    html += '<div class="hint">' + hint + "</div>";
-    html += '<textarea id="ans" placeholder="Type the conditions you would call out…" ' + (QUIZ.revealed ? "disabled" : "") + ">" + esc(QUIZ.answer || "") + "</textarea>";
-    if (!QUIZ.revealed) {
-      html += '<div class="grade-row"><button class="btn primary" id="reveal">Reveal answer</button><button class="btn" id="skip">Skip</button></div>';
-    } else {
-      var userText = QUIZ.answer || "";
-      var conds = i.conditions.length
-        ? '<div class="conds">' + i.conditions.map(function (c) { return '<span class="cond ' + (condHit(c, userText) ? "hit" : "") + '">' + esc(c) + "</span>"; }).join("") + "</div>"
-        : '<p class="meta">(No specific conditions — just identify it.)</p>';
-      var subs = i.subchecks.length ? '<ul class="subs">' + i.subchecks.map(function (sc) { return "<li><b>" + esc(sc.name) + "</b>" + (sc.conditions.length ? " — " + esc(sc.conditions.join(", ")) : "") + "</li>"; }).join("") + "</ul>" : "";
-      html += '<div class="reveal"><div class="lbl">Conditions to call out</div>' + conds + subs + "</div>";
-      html += '<div class="grade-row"><button class="btn good" data-grade="nailed">✓ Nailed (2+)</button><button class="btn warn" data-grade="partial">~ Partial</button><button class="btn bad" data-grade="missed">✗ Missed</button></div>';
+  function renderQuiz() { if (QUIZ) renderQuizSession(); else renderQuizHub(); }
+
+  function qcard(id, title, sub) {
+    return '<button class="qcard-btn" id="' + id + '"><div class="qc-t">' + esc(title) + '</div><div class="qc-s">' + esc(sub) + "</div></button>";
+  }
+  function renderQuizHub() {
+    var due = ITEMS.filter(function (i) { return dueOf(i.id); }).length;
+    var weak = ITEMS.filter(function (i) { var m = masteryOf(i.id); return m >= 1 && m <= 2; }).length;
+    var crit = ITEMS.filter(function (i) { return i.critical; });
+    var mastered = ITEMS.filter(function (i) { return masteryOf(i.id) >= 5; }).length;
+    var overall = Math.round((mastered / ITEMS.length) * 100);
+    var critPct = crit.length ? Math.round((crit.filter(function (i) { return masteryOf(i.id) >= 5; }).length / crit.length) * 100) : 0;
+    var html = '<div class="page-head"><h1>Quiz</h1><p>Fast multiple-choice practice — the right check, the right number, the right order. Every answer is graded and feeds your review schedule.</p></div>';
+    html += '<div class="qhero"><div class="qhero-txt"><div class="qhero-t">Quick 10</div><div class="qhero-s">' +
+      (weak + due > 0 ? "10 mixed questions from your weak &amp; due items" : "10 mixed questions across the whole inspection") +
+      '</div></div><button class="btn primary big" id="q-quick">Start</button></div>';
+    html += '<div class="qcards">';
+    html += qcard("q-weak", "Weak spots", weak + " item" + (weak === 1 ? "" : "s") + " to shore up");
+    html += qcard("q-crit", "Critical & numbers", crit.length + " auto-fail items + air-brake facts");
+    html += qcard("q-sect", "By section", "In-cab, air brakes, coupling, tractor, trailer");
+    html += qcard("q-walk", "Walk-around", "Timed run in inspection order");
+    html += "</div>";
+    html += '<div id="q-sectlist" class="row" style="display:none;margin-top:8px">' +
+      SEC.map(function (s) { return '<button class="btn sm" data-sect="' + s.id + '">' + esc(s.title) + "</button>"; }).join("") + "</div>";
+    html += '<div class="grp-label" style="margin-top:24px">Your progress</div>';
+    html += '<div class="dash-grid">' + dashKpi(mastered + "/" + ITEMS.length, "Mastered") + dashKpi(overall + "%", "Overall") + dashKpi(critPct + "%", "Critical ready") + dashKpi(due, "Due today") + "</div>";
+    html += '<div class="secbars">';
+    SEC.forEach(function (s) {
+      var all = ITEMS.filter(function (i) { return i.section === s.id; });
+      var m = all.filter(function (i) { return masteryOf(i.id) >= 5; }).length;
+      var pct = Math.round((m / all.length) * 100);
+      html += '<div class="secbar"><span class="nm">' + esc(s.title) + '</span><div class="bar"><i style="width:' + pct + '%"></i></div><span class="pct">' + pct + "%</span></div>";
+    });
+    html += "</div>";
+    html += '<div class="row" style="margin-top:12px"><button class="btn sm" id="q-numbers">Numbers drill</button><a class="btn sm" href="#/progress">Full progress &amp; backup</a></div>';
+    mount(html, function () {
+      document.getElementById("q-quick").addEventListener("click", function () { startQuiz({ scope: "mixed", count: 10, label: "Quick practice" }); });
+      document.getElementById("q-weak").addEventListener("click", function () { startQuiz({ scope: "weak", count: 12, label: "Weak spots" }); });
+      document.getElementById("q-crit").addEventListener("click", function () { startQuiz({ scope: "critical", count: 12, label: "Critical & numbers" }); });
+      document.getElementById("q-numbers").addEventListener("click", function () { startQuiz({ scope: "numbers", label: "Numbers" }); });
+      document.getElementById("q-walk").addEventListener("click", function () { location.hash = "#/walk"; });
+      document.getElementById("q-sect").addEventListener("click", function () { var el = document.getElementById("q-sectlist"); el.style.display = el.style.display === "none" ? "flex" : "none"; });
+      on("[data-sect]", "click", function () { startQuiz(this.getAttribute("data-sect")); });
+    });
+  }
+
+  function renderQuizSession() {
+    if (!QUIZ || QUIZ.i >= QUIZ.questions.length) { renderQuizDone(); return; }
+    var q = QUIZ.questions[QUIZ.i], n = QUIZ.questions.length;
+    var html = '<div class="runbar"><span>' + esc(QUIZ.label) + " · " + (QUIZ.i + 1) + " / " + n + '</span><div class="bar" style="height:6px"><i style="width:' + Math.round((QUIZ.i / n) * 100) + '%"></i></div><span class="timer">' + QUIZ.score + " pts</span></div>";
+    html += '<div class="qcard quizq"><div class="qtype">' + (QTYPE[q.type] || "Question") + "</div>";
+    html += '<div class="qprompt">' + esc(q.prompt) + "</div>";
+    if (q.diagramId) { var d = diagramById(q.diagramId); if (d) html += '<div class="qdiagram"><img src="' + d.img + '" alt="' + esc(d.title) + '"></div>'; }
+    html += '<div class="qopts">';
+    q.options.forEach(function (o, idx) {
+      var cls = "qopt";
+      if (QUIZ.answered) { cls += idx === q.correct ? " correct" : (idx === QUIZ.chosen ? " wrong" : " dim"); }
+      html += '<button class="' + cls + '" data-opt="' + idx + '"' + (QUIZ.answered ? " disabled" : "") + ">" + esc(o) + "</button>";
+    });
+    html += "</div>";
+    if (QUIZ.answered) {
+      var right = QUIZ.chosen === q.correct;
+      html += '<div class="qfeedback ' + (right ? "good" : "bad") + '">' + (right ? "✓ Correct. " : "✗ Not quite. ") + esc(q.explanation) + "</div>";
+      html += '<div class="grade-row"><button class="btn primary big" id="qnext">' + (QUIZ.i + 1 >= n ? "See results" : "Next question") + "</button></div>";
     }
     html += "</div>";
+    html += '<div class="row" style="margin-top:8px"><button class="btn sm" id="qquit">End quiz</button></div>';
     mount(html, function () {
-      var ta = document.getElementById("ans");
-      var rv = document.getElementById("reveal");
-      if (rv) rv.addEventListener("click", function () { QUIZ.answer = ta.value; QUIZ.revealed = true; renderQuiz(); });
-      var sk = document.getElementById("skip"); if (sk) sk.addEventListener("click", next);
-      on("[data-grade]", "click", function () { grade(i.id, this.getAttribute("data-grade")); QUIZ.results[this.getAttribute("data-grade")]++; next(); });
-      if (ta && !QUIZ.revealed) ta.focus();
+      on("[data-opt]", "click", function () {
+        if (QUIZ.answered) return;
+        QUIZ.chosen = +this.getAttribute("data-opt");
+        QUIZ.answered = true;
+        var ok = QUIZ.chosen === q.correct;
+        if (ok) { QUIZ.right++; QUIZ.streak++; if (QUIZ.streak > QUIZ.best) QUIZ.best = QUIZ.streak; QUIZ.score += 100 + Math.min(QUIZ.streak - 1, 5) * 10; }
+        else { QUIZ.wrong++; QUIZ.streak = 0; if (q.itemId) QUIZ.missed.push(q.itemId); }
+        if (q.itemId) grade(q.itemId, ok ? "nailed" : "missed");
+        track("quiz_answer", { type: q.type, correct: ok });
+        renderQuizSession();
+      });
+      var nx = document.getElementById("qnext"); if (nx) nx.addEventListener("click", function () { QUIZ.i++; QUIZ.answered = false; QUIZ.chosen = -1; renderQuizSession(); });
+      document.getElementById("qquit").addEventListener("click", function () { QUIZ = null; renderQuizHub(); });
     });
-    function next() { QUIZ.i++; QUIZ.revealed = false; QUIZ.answer = ""; renderQuiz(); }
-  }
-  function quizSourceLabel() {
-    var s = QUIZ.source;
-    if (s === "drill") return "Single-item drill";
-    if (secById[s]) return secById[s].title;
-    return ({ due: "Due items", weak: "Weak items", critical: "Critical items", mastered: "Mastered spot-check", all: "All items" }[s] || "Quiz");
   }
   function renderQuizDone() {
-    var r = QUIZ.results, tot = r.nailed + r.partial + r.missed;
+    var n = QUIZ.questions.length, r = QUIZ.right;
+    var pct = n ? Math.round((r / n) * 100) : 0;
+    var verdict = pct >= 90 ? "SHARP" : pct >= 70 ? "GETTING THERE" : "KEEP DRILLING";
+    var vclass = pct >= 90 ? "pass" : pct >= 70 ? "almost" : "fail";
+    var missedIds = QUIZ.missed.slice();
+    track("quiz_complete", { pct: pct, n: n, label: QUIZ.label });
     var html = '<div class="page-head"><h1>Quiz complete</h1></div><div class="scorecard">';
-    html += '<div class="score-grid">' +
-      kpi(r.nailed, "Nailed") + kpi(r.partial, "Partial") + kpi(r.missed, "Missed") + kpi(tot, "Total") + "</div>";
-    html += '<div class="row"><button class="btn primary" id="again">Quiz again</button><button class="btn" onclick="location.hash=\'#/learn\'">Back to Learn</button></div></div>';
-    mount(html, function () { document.getElementById("again").addEventListener("click", function () { QUIZ = null; renderQuizPicker(); }); });
-  }
-  function renderQuizPicker() {
-    var due = ITEMS.filter(function (i) { return isDue(i.id); }).length;
-    var weak = ITEMS.filter(function (i) { return prog(i.id).mastery <= 2; }).length;
-    var crit = ITEMS.filter(function (i) { return i.critical; }).length;
-    var html = '<div class="page-head"><h1>Quiz</h1><p>Recall mode. You’re shown an item; say it out loud with at least two conditions, then reveal and grade yourself. Grades feed spaced repetition.</p></div>';
-    html += '<div class="panel"><h3>Smart queues</h3><p>The fastest way to study — the app picks what you most need.</p><div class="row">';
-    html += '<button class="btn primary" data-q="due">Due today (' + due + ")</button>";
-    html += '<button class="btn" data-q="weak">Weak items (' + weak + ")</button>";
-    html += '<button class="btn" data-q="critical">Critical only (' + crit + ")</button>";
-    html += '<button class="btn" data-q="all">All items</button></div></div>';
-    html += '<div class="panel"><h3>By section</h3><p>Drill one area at a time.</p><div class="row">';
-    SEC.forEach(function (s) { html += '<button class="btn" data-q="' + s.id + '">' + esc(s.title) + "</button>"; });
-    html += "</div></div>";
-    mount(html, function () { on("[data-q]", "click", function () { startQuiz(this.getAttribute("data-q")); }); });
+    html += '<div class="verdict ' + vclass + '">' + verdict + "</div>";
+    html += '<div class="meta">' + esc(QUIZ.label) + " · best streak " + QUIZ.best + "</div>";
+    html += '<div class="score-grid">' + kpi(r + "/" + n, "Correct") + kpi(pct + "%", "Score") + kpi(QUIZ.score, "Points") + kpi(QUIZ.best, "Streak") + "</div>";
+    html += '<div class="row" style="margin-top:16px"><button class="btn primary" id="q-again">Another 10</button>';
+    if (missedIds.length) html += '<button class="btn" id="q-missed">Drill missed (' + missedIds.length + ")</button>";
+    html += '<button class="btn" id="q-hub">Quiz menu</button></div></div>';
+    mount(html, function () {
+      document.getElementById("q-again").addEventListener("click", function () { startQuiz({ scope: "mixed", count: 10, label: "Quick practice" }); });
+      var qm = document.getElementById("q-missed"); if (qm) qm.addEventListener("click", function () { startQuiz(missedIds); });
+      document.getElementById("q-hub").addEventListener("click", function () { QUIZ = null; renderQuizHub(); });
+    });
   }
   function kpi(n, l) { return '<div class="score-kpi"><div class="n">' + n + '</div><div class="l">' + l + "</div></div>"; }
 
@@ -691,9 +736,12 @@
     if (TMSEL) { renderTruckZone(TMSEL); return; }
     var map = window.PRETRIP_TRUCKMAP || { svg: "img/diagrams/truck-map.svg", zones: [] };
     var html = '<div class="page-head"><h1>Tap the truck</h1><p>Walk the rig the way the examiner will. Tap any area to study its items — each zone is shaded by how much you’ve mastered.</p></div>';
+    html += '<div class="qhero"><div class="qhero-txt"><div class="qhero-t">Practice now</div><div class="qhero-s">10 quick questions from your weak spots</div></div><button class="btn primary big" id="home-quick">Start</button></div>';
     html += '<div class="truckwrap" id="truckwrap"><div class="truck-loading meta">Loading diagram…</div></div>';
     html += '<div class="row" style="margin-top:10px"><a class="btn sm" href="#/diagrams">Picture dictionary</a><a class="btn sm" href="#/walk">Full walk-around</a></div>';
     mount(html, function () {
+      var hq = document.getElementById("home-quick");
+      if (hq) hq.addEventListener("click", function () { startQuiz({ scope: "mixed", count: 10, label: "Quick practice" }); });
       var wrap = document.getElementById("truckwrap");
       fetch(map.svg).then(function (r) { return r.text(); }).then(function (svg) {
         wrap.innerHTML = svg;
@@ -725,7 +773,7 @@
         return '<span class="diag-chip" data-diag="' + d.id + '"><img src="' + d.img + '" alt=""> ' + esc(d.title) + "</span>";
       }).join("") + "</div>";
     }
-    html += '<div class="row" style="margin:8px 0 14px"><button class="btn primary" id="tm-drill">Drill this area</button><button class="btn" id="tm-walk">Walk this area</button></div>';
+    html += '<div class="row" style="margin:8px 0 14px"><button class="btn primary" id="tm-drill">Quiz this area</button><button class="btn" id="tm-walk">Walk this area</button></div>';
     var curGroup = null;
     all.forEach(function (i) {
       if (i.group !== curGroup) { curGroup = i.group; html += '<div class="grp-label">' + esc(i.group) + "</div>"; }
@@ -744,20 +792,30 @@
   // =====================================================================
   // ROUTER
   // =====================================================================
-  var ROUTES = { home: renderHome, truck: renderTruckMap, diagrams: renderDiagrams, learn: renderLearn, quiz: renderQuiz, walk: renderWalk, examiner: renderExaminer, progress: renderProgress };
+  // Home is now the Tap-the-Truck map; the old instant-flashcard (renderHome) is retired
+  // (unreachable — quick single-tap practice lives in the Quiz hub + the "Practice now" CTA).
+  var ROUTES = { home: renderTruckMap, truck: renderTruckMap, diagrams: renderDiagrams, learn: renderLearn, quiz: renderQuiz, walk: renderWalk, examiner: renderExaminer, progress: renderProgress };
+  // the floating "Quiz me" button is hidden inside a quiz/run so it never overlaps the action
+  function updateFab(name) {
+    var f = document.getElementById("fab"); if (!f) return;
+    f.style.display = (name === "quiz" || name === "walk" || name === "examiner" || QUIZ || RUN) ? "none" : "flex";
+  }
   function route() {
     if (TIMER && !(RUN && (location.hash.indexOf("walk") >= 0 || location.hash.indexOf("examiner") >= 0))) endRun();
     var name = (location.hash.replace(/^#\//, "") || "home").split("/")[0];
     if (!ROUTES[name]) name = "home";
-    if (name !== "truck") TMSEL = null; // leaving the map resets to the overview
+    if (name !== "truck" && name !== "home") TMSEL = null; // leaving the map resets to the overview
     document.querySelectorAll("#nav a").forEach(function (a) { a.classList.toggle("active", a.getAttribute("data-route") === name); });
     track("mode_enter", { mode: name });
     ROUTES[name]();
+    updateFab(name);
   }
   window.addEventListener("hashchange", route);
 
   // ---------- boot ----------------------------------------------------------
   document.getElementById("foot-count").textContent = ITEMS.length + " items · 6 sections";
+  var fab = document.getElementById("fab");
+  if (fab) fab.addEventListener("click", function () { startQuiz({ scope: "mixed", count: 5, sprint: true, label: "Quick sprint" }); });
   if (!location.hash) location.hash = "#/home";
   route();
 })();

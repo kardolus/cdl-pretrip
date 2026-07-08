@@ -48,7 +48,7 @@ window.PRETRIP_DIAGRAMS = [
       { n: 9, label: "Front Brake Chambers" },
       { n: 10, label: "Rear Spring-Brake Chambers" },
       { n: 11, label: "Slack Adjuster & S-Cam" },
-      { n: 12, label: "Low-Air Warning (on before ~55 psi)" },
+      { n: 12, label: "Low-Air Warning (on before ~60 psi)" },
       { n: 13, label: "Parking / Spring-Brake Valve (yellow diamond)" },
       { n: 14, label: "Tractor Protection & Trailer Supply Valve (red octagon)" },
       { n: 15, label: "Gladhands (service + emergency lines)" },

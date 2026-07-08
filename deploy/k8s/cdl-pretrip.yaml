@@ -1,8 +1,8 @@
 # CDL Pretrip — static study app on the forge cluster.
 #
 # Build + push (on forge; no passwordless sudo there, so GHCR not ctr-import):
-#   docker build -t ghcr.io/kardolus/cdl-web:v8 .
-#   docker push ghcr.io/kardolus/cdl-web:v8
+#   docker build -t ghcr.io/kardolus/cdl-web:v9 .
+#   docker push ghcr.io/kardolus/cdl-web:v9
 #
 # One-time cluster setup (from the Mac, kubectl --context forge):
 #   kubectl create namespace cdl
@@ -36,7 +36,7 @@ spec:
         - name: ghcr-pull
       containers:
         - name: cdl-web
-          image: ghcr.io/kardolus/cdl-web:v8
+          image: ghcr.io/kardolus/cdl-web:v9
           imagePullPolicy: IfNotPresent
           ports:
             - {containerPort: 80, name: http}

@@ -65,7 +65,7 @@
   <!-- 12 low-air warning -->
   <rect class="box" x="560" y="360" width="150" height="48" rx="6"/>
   <text class="lbl" x="635" y="381" text-anchor="middle">Low-Air Warning</text>
-  <text class="sub" x="635" y="398" text-anchor="middle">on before ~55 psi</text>
+  <text class="sub" x="635" y="398" text-anchor="middle">on before ~60 psi</text>
   <!-- 9 front chambers -->
   <rect class="box" x="120" y="486" width="150" height="54" rx="6"/>
   <text class="lbl" x="195" y="510" text-anchor="middle">Front Brake</text>
