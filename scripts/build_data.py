@@ -100,17 +100,28 @@ def fix(text):
 
 
 def parse_item(text):
-    """'Name (cond1, cond2)' -> ('Name', ['cond1', 'cond2'])."""
+    """'Name (cond1, cond2)' -> ('Name', ['cond1', 'cond2'], note).
+
+    Also handles a leading qualifier group, e.g. the gladhand lines
+    'Service line (blue) (no abrasions, no bumps, ...)' -> the '(blue)' becomes the
+    note, not a mangled first condition.
+    """
     text = fix(text).strip()
     m = re.match(r"^(.*?)\s*\((.*)\)\s*$", text, re.S)
     if m:
         name = m.group(1).strip()
-        conds = [c.strip() for c in re.split(r",|;", m.group(2)) if c.strip()]
-        return name, conds
+        body = m.group(2)
+        note = ""
+        q = re.match(r"^\s*([^()]*?)\)\s*\((.*)$", body, re.S)  # "qualifier) (conditions"
+        if q:
+            note = q.group(1).strip()
+            body = q.group(2)
+        conds = [c.strip() for c in re.split(r",|;", body) if c.strip()]
+        return name, conds, note
     # a few source lines have a dangling trailing ")" with no opening paren
     if text.endswith(")") and "(" not in text:
         text = text[:-1].strip()
-    return text, []
+    return text, [], ""
 
 
 def children(block_id):
@@ -184,7 +195,7 @@ def main():
             text = rich(b["to_do"]["rich_text"])
             if not text:
                 continue
-            name, conds = parse_item(text)
+            name, conds, note = parse_item(text)
             if not name:
                 continue
             sec = section_for(part, group)
@@ -200,7 +211,7 @@ def main():
                 "conditions": conds,
                 "subchecks": collect_subchecks(b),
                 "critical": bool(CRITICAL_RE.search(blob)),
-                "note": "",
+                "note": note,
             })
 
     data = {"sections": SECTIONS, "items": items}

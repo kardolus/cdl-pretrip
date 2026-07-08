@@ -719,7 +719,7 @@ window.PRETRIP_DATA = {
       "order": 41,
       "name": "Service line",
       "conditions": [
-        "blue) (no abrasions",
+        "no abrasions",
         "no bumps",
         "no cuts",
         "no leaks"
@@ -731,7 +731,7 @@ window.PRETRIP_DATA = {
         }
       ],
       "critical": true,
-      "note": ""
+      "note": "blue"
     },
     {
       "id": "coupling-02",
@@ -740,7 +740,7 @@ window.PRETRIP_DATA = {
       "order": 42,
       "name": "Emergency line",
       "conditions": [
-        "red) (no abrasions",
+        "no abrasions",
         "no bumps",
         "no cuts",
         "no leaks"
@@ -752,7 +752,7 @@ window.PRETRIP_DATA = {
         }
       ],
       "critical": true,
-      "note": ""
+      "note": "red"
     },
     {
       "id": "coupling-03",

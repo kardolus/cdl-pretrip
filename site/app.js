@@ -105,6 +105,12 @@
 
   // ---------- icons ---------------------------------------------------------
   function dotClass(id) { return "dot m" + prog(id).mastery; }
+  // small qualifier tag from item.note (e.g. gladhand color: blue = service, red = emergency)
+  function noteTag(it) {
+    var n = (it.note || "").trim(); if (!n) return "";
+    var cls = /^blue$/i.test(n) ? "ntag blue" : /^red$/i.test(n) ? "ntag red" : "ntag";
+    return '<span class="' + cls + '">' + esc(n) + "</span>";
+  }
 
   // ---------- diagram lightbox ----------------------------------------------
   function openLightbox(id) {
@@ -220,7 +226,7 @@
       }).join("") + "</ul>" : "";
     return '<div class="item ' + (i.critical ? "crit" : "") + '" data-id="' + i.id + '">' +
       '<div class="item-row"><span class="' + dotClass(i.id) + '"></span>' +
-      '<span class="item-name">' + esc(i.name) + (i.critical ? '<span class="crit-flag">critical</span>' : "") + "</span>" +
+      '<span class="item-name">' + esc(i.name) + noteTag(i) + (i.critical ? '<span class="crit-flag">critical</span>' : "") + "</span>" +
       '<span class="caret">▶</span></div>' +
       '<div class="item-body">' + conds + subs +
       '<div class="item-actions">' +
@@ -281,7 +287,7 @@
     var html = "";
     html += '<div class="page-head"><h1>Quiz</h1><p class="meta">' + quizSourceLabel() + " · " + (QUIZ.i + 1) + " / " + QUIZ.queue.length + "</p></div>";
     html += '<div class="qcard"><div class="loc">' + esc(sec.title) + " · " + esc(i.group) + "</div>";
-    html += '<div class="prompt">' + esc(i.name) + (i.critical ? '<span class="crit-flag">critical</span>' : "") + "</div>";
+    html += '<div class="prompt">' + esc(i.name) + noteTag(i) + (i.critical ? '<span class="crit-flag">critical</span>' : "") + "</div>";
     html += '<div class="hint">' + hint + "</div>";
     html += '<textarea id="ans" placeholder="Type the conditions you would call out…" ' + (QUIZ.revealed ? "disabled" : "") + ">" + esc(QUIZ.answer || "") + "</textarea>";
     if (!QUIZ.revealed) {
@@ -437,7 +443,7 @@
       html += '<div class="hint">' + (examiner ? "Point, name it, and state your conditions out loud. No peeking." : "Recall the next item in order and its conditions, out loud.") + (i.critical ? " <b>(critical item)</b>" : "") + "</div>";
       html += '<div class="grade-row"><button class="btn primary" id="reveal">I said it — reveal</button></div>';
     } else {
-      html += '<div class="prompt">' + esc(i.name) + (i.critical ? '<span class="crit-flag">critical</span>' : "") + "</div>";
+      html += '<div class="prompt">' + esc(i.name) + noteTag(i) + (i.critical ? '<span class="crit-flag">critical</span>' : "") + "</div>";
       html += i.conditions.length
         ? '<div class="conds">' + i.conditions.map(function (c) { return '<span class="cond">' + esc(c) + "</span>"; }).join("") + "</div>"
         : '<p class="meta">Identify and name this item.</p>';
@@ -627,7 +633,7 @@
     if (firstTime) html += '<div class="home-coach">👋 New here? Tap the card, say the answer out loud, then grade yourself. That’s the whole app — one item at a time.</div>';
     html += '<div class="flash">';
     html += '<div class="flash-loc">' + esc(sec.part) + " · " + esc(sec.title) + " · " + esc(it.group) + "</div>";
-    html += '<div class="flash-name">' + esc(it.name) + (it.critical ? '<span class="crit-flag">critical</span>' : "") + "</div>";
+    html += '<div class="flash-name">' + esc(it.name) + noteTag(it) + (it.critical ? '<span class="crit-flag">critical</span>' : "") + "</div>";
     if (!HOME.revealed) {
       html += '<div class="flash-hint">' + (it.conditions.length ? "Say what you check out loud — at least two conditions." : "Identify and name this item.") + "</div>";
       html += '<button class="btn primary big" id="reveal">Tap to reveal</button>';
