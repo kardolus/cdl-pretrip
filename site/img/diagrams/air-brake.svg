@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" role="img" aria-label="Air brake system schematic">
+  <rect x="0" y="0" width="1000" height="600" fill="#ffffff"/>
+  <style>
+    .box{fill:#f3f4f6;stroke:#14171e;stroke-width:2.2;}
+    .lbl{font-family:'Space Grotesk',system-ui,sans-serif;font-size:14px;font-weight:600;fill:#14171e;}
+    .sub{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11px;fill:#5b5f67;}
+    .supply{fill:none;stroke:#1a7f4b;stroke-width:4;}
+    .service{fill:none;stroke:#2563eb;stroke-width:4;stroke-dasharray:1 0;}
+    .park{fill:none;stroke:#c0392b;stroke-width:4;stroke-dasharray:9 6;}
+    .cn{fill:#0f6b46;}
+    .cnt{font-family:'Space Grotesk',system-ui,sans-serif;font-size:13px;font-weight:700;fill:#ffffff;}
+    .leadl{stroke:#0f6b46;stroke-width:1.4;fill:none;}
+  </style>
+
+  <!-- ============ connectors (drawn first, under boxes) ============ -->
+  <!-- SUPPLY circuit (green): compressor -> governor -> dryer -> wet tank -> service tanks -->
+  <path class="supply" d="M180 122 H210"/>
+  <path class="supply" d="M320 122 H350"/>
+  <path class="supply" d="M470 122 H520"/>
+  <path class="supply" d="M595 158 V196 H545 V236"/>
+  <path class="supply" d="M595 158 V196 H755 V236"/>
+  <!-- SERVICE circuit (blue): tanks -> foot valve -> chambers -->
+  <path class="service" d="M545 304 V330 H370 V366"/>
+  <path class="service" d="M755 304 V340 H440 H370"/>
+  <path class="service" d="M300 393 H210 V420 H195 V486"/>
+  <path class="service" d="M440 393 H470 V486"/>
+  <!-- PARK / emergency circuit (red): spring-brake valve + tractor protection -> gladhands -->
+  <path class="park" d="M185 360 V340 H420 V486"/>
+  <path class="park" d="M670 487 H720"/>
+  <path class="park" d="M570 460 V420 H810 V434"/>
+
+  <!-- ============ components ============ -->
+  <!-- 1 compressor -->
+  <rect class="box" x="60" y="95" width="120" height="54" rx="6"/>
+  <text class="lbl" x="120" y="120" text-anchor="middle">Compressor</text>
+  <text class="sub" x="120" y="138" text-anchor="middle">builds air</text>
+  <!-- 2 governor -->
+  <rect class="box" x="210" y="95" width="110" height="54" rx="6"/>
+  <text class="lbl" x="265" y="120" text-anchor="middle">Governor</text>
+  <text class="sub" x="265" y="138" text-anchor="middle">cut-in/out</text>
+  <!-- 3 air dryer -->
+  <rect class="box" x="350" y="95" width="120" height="54" rx="6"/>
+  <text class="lbl" x="410" y="120" text-anchor="middle">Air Dryer</text>
+  <text class="sub" x="410" y="138" text-anchor="middle">removes water</text>
+  <!-- 4 wet / supply tank -->
+  <rect class="box" x="520" y="95" width="150" height="64" rx="18"/>
+  <text class="lbl" x="595" y="122" text-anchor="middle">Wet (Supply)</text>
+  <text class="lbl" x="595" y="140" text-anchor="middle">Tank</text>
+  <!-- 5 primary tank -->
+  <rect class="box" x="470" y="236" width="150" height="68" rx="18"/>
+  <text class="lbl" x="545" y="266" text-anchor="middle">Primary Tank</text>
+  <text class="sub" x="545" y="284" text-anchor="middle">rear brakes</text>
+  <!-- 6 secondary tank -->
+  <rect class="box" x="680" y="236" width="150" height="68" rx="18"/>
+  <text class="lbl" x="755" y="266" text-anchor="middle">Secondary Tank</text>
+  <text class="sub" x="755" y="284" text-anchor="middle">front brakes</text>
+  <!-- 8 foot / service brake valve -->
+  <rect class="box" x="300" y="366" width="140" height="54" rx="6"/>
+  <text class="lbl" x="370" y="390" text-anchor="middle">Foot / Service</text>
+  <text class="lbl" x="370" y="408" text-anchor="middle">Brake Valve</text>
+  <!-- 13 parking / spring-brake valve -->
+  <rect class="box" x="70" y="333" width="150" height="54" rx="6"/>
+  <text class="lbl" x="145" y="357" text-anchor="middle">Parking /</text>
+  <text class="lbl" x="145" y="375" text-anchor="middle">Spring-Brake Valve</text>
+  <!-- 12 low-air warning -->
+  <rect class="box" x="560" y="360" width="150" height="48" rx="6"/>
+  <text class="lbl" x="635" y="381" text-anchor="middle">Low-Air Warning</text>
+  <text class="sub" x="635" y="398" text-anchor="middle">on before ~55 psi</text>
+  <!-- 9 front chambers -->
+  <rect class="box" x="120" y="486" width="150" height="54" rx="6"/>
+  <text class="lbl" x="195" y="510" text-anchor="middle">Front Brake</text>
+  <text class="lbl" x="195" y="528" text-anchor="middle">Chambers</text>
+  <!-- 10 rear spring-brake chambers -->
+  <rect class="box" x="300" y="486" width="180" height="54" rx="6"/>
+  <text class="lbl" x="390" y="510" text-anchor="middle">Rear Spring-Brake</text>
+  <text class="lbl" x="390" y="528" text-anchor="middle">Chambers</text>
+  <!-- 11 slack adjuster / s-cam -->
+  <rect class="box" x="720" y="360" width="190" height="54" rx="6"/>
+  <text class="lbl" x="815" y="384" text-anchor="middle">Slack Adjuster</text>
+  <text class="lbl" x="815" y="402" text-anchor="middle">&amp; S-Cam</text>
+  <!-- 14 tractor protection / trailer supply -->
+  <rect class="box" x="470" y="433" width="200" height="54" rx="6"/>
+  <text class="lbl" x="570" y="457" text-anchor="middle">Tractor Protection /</text>
+  <text class="lbl" x="570" y="475" text-anchor="middle">Trailer Supply Valve</text>
+  <!-- 15 gladhands -->
+  <rect class="box" x="720" y="486" width="190" height="54" rx="6"/>
+  <text class="lbl" x="815" y="510" text-anchor="middle">Gladhands</text>
+  <text class="sub" x="815" y="528" text-anchor="middle">service + emergency</text>
+
+  <!-- 7 safety valve on wet tank -->
+  <circle cx="595" cy="82" r="12" fill="#f3f4f6" stroke="#14171e" stroke-width="2"/>
+  <path d="M595 74 v-14 M588 63 h14" stroke="#14171e" stroke-width="2" fill="none"/>
+
+  <!-- ============ numbered callouts ============ -->
+  <g>
+    <circle class="cn" cx="66" cy="90" r="12"/><text class="cnt" x="66" y="95" text-anchor="middle">1</text>
+    <circle class="cn" cx="216" cy="90" r="12"/><text class="cnt" x="216" y="95" text-anchor="middle">2</text>
+    <circle class="cn" cx="356" cy="90" r="12"/><text class="cnt" x="356" y="95" text-anchor="middle">3</text>
+    <circle class="cn" cx="526" cy="90" r="12"/><text class="cnt" x="526" y="95" text-anchor="middle">4</text>
+    <circle class="cn" cx="476" cy="231" r="12"/><text class="cnt" x="476" y="236" text-anchor="middle">5</text>
+    <circle class="cn" cx="686" cy="231" r="12"/><text class="cnt" x="686" y="236" text-anchor="middle">6</text>
+    <circle class="cn" cx="595" cy="46" r="12"/><text class="cnt" x="595" y="51" text-anchor="middle">7</text>
+    <circle class="cn" cx="306" cy="361" r="12"/><text class="cnt" x="306" y="366" text-anchor="middle">8</text>
+    <circle class="cn" cx="126" cy="481" r="12"/><text class="cnt" x="126" y="486" text-anchor="middle">9</text>
+    <circle class="cn" cx="306" cy="481" r="12"/><text class="cnt" x="306" y="486" text-anchor="middle">10</text>
+    <circle class="cn" cx="726" cy="355" r="12"/><text class="cnt" x="726" y="360" text-anchor="middle">11</text>
+    <circle class="cn" cx="566" cy="356" r="12"/><text class="cnt" x="566" y="361" text-anchor="middle">12</text>
+    <circle class="cn" cx="76" cy="328" r="12"/><text class="cnt" x="76" y="333" text-anchor="middle">13</text>
+    <circle class="cn" cx="476" cy="428" r="12"/><text class="cnt" x="476" y="433" text-anchor="middle">14</text>
+    <circle class="cn" cx="726" cy="481" r="12"/><text class="cnt" x="726" y="486" text-anchor="middle">15</text>
+  </g>
+
+  <!-- color legend -->
+  <g font-family="'JetBrains Mono',ui-monospace,monospace" font-size="12" fill="#5b5f67">
+    <line class="supply" x1="60" y1="566" x2="96" y2="566"/><text x="104" y="570">supply</text>
+    <line class="service" x1="200" y1="566" x2="236" y2="566"/><text x="244" y="570">service</text>
+    <line class="park" x1="360" y1="566" x2="396" y2="566"/><text x="404" y="570">parking / emergency</text>
+  </g>
+</svg>

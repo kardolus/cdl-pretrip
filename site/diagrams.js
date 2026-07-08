@@ -33,6 +33,28 @@ window.PRETRIP_DIAGRAMS = [
     ],
   },
   {
+    id: "air-brake", title: "Air Brake System", section: "air-brake",
+    groups: ["Air Brake Test", "Tug Tests"],
+    img: "img/diagrams/air-brake.svg", schematic: true,
+    legend: [
+      { n: 1, label: "Air Compressor (builds air pressure)" },
+      { n: 2, label: "Governor (cut-in ~100 / cut-out ~125 psi)" },
+      { n: 3, label: "Air Dryer (removes moisture)" },
+      { n: 4, label: "Wet / Supply Tank" },
+      { n: 5, label: "Primary Service Tank (rear brakes)" },
+      { n: 6, label: "Secondary Service Tank (front brakes)" },
+      { n: 7, label: "Safety (pop-off) Valve (~150 psi)" },
+      { n: 8, label: "Foot / Service Brake Valve" },
+      { n: 9, label: "Front Brake Chambers" },
+      { n: 10, label: "Rear Spring-Brake Chambers" },
+      { n: 11, label: "Slack Adjuster & S-Cam" },
+      { n: 12, label: "Low-Air Warning (on before ~55 psi)" },
+      { n: 13, label: "Parking / Spring-Brake Valve (yellow diamond)" },
+      { n: 14, label: "Tractor Protection & Trailer Supply Valve (red octagon)" },
+      { n: 15, label: "Gladhands (service + emergency lines)" },
+    ],
+  },
+  {
     id: "front", title: "Front of Tractor", section: "part-a", groups: ["Outside"],
     img: "img/diagrams/front.webp",
     legend: [

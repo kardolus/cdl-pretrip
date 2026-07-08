@@ -55,6 +55,15 @@
   }
   function isDue(id) { var p = prog(id); return p.due && p.due <= todayStr(); }
   function fmtTime(s) { var m = Math.floor(s / 60); return m + ":" + pad(s % 60); }
+  // non-side-effecting reads (do NOT materialize a blank progress record)
+  function masteryOf(id) { var p = S.progress[id]; return p ? p.mastery : 0; }
+  function dueOf(id) { var p = S.progress[id]; return !!(p && p.due && p.due <= todayStr()); }
+  function sectionPct(sid) {
+    var all = ITEMS.filter(function (i) { return i.section === sid; });
+    if (!all.length) return 0;
+    var m = all.filter(function (i) { return masteryOf(i.id) >= 5; }).length;
+    return Math.round((m / all.length) * 100);
+  }
 
   // ---------- grading / spaced repetition ----------------------------------
   function grade(id, result) {
@@ -79,6 +88,8 @@
   function mount(html, after) { app.innerHTML = html; window.scrollTo(0, 0); if (after) after(); }
   function on(sel, ev, fn, root) { (root || app).querySelectorAll(sel).forEach(function (n) { n.addEventListener(ev, fn); }); }
   function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  // analytics — thin wrapper over Umami (index.html loads the script). No-op if blocked.
+  function track(name, data) { try { if (window.umami && umami.track) umami.track(name, data || undefined); } catch (e) { /* ignore */ } }
 
   // significant words of a condition string, for keyword matching in the quiz
   var STOP = { the: 1, and: 1, are: 1, "for": 1, that: 1, with: 1, not: 1, "no": 1, is: 1, of: 1, to: 1, a: 1, in: 1, on: 1, it: 1, me: 1, up: 1 };
@@ -220,7 +231,8 @@
       '<button class="btn sm bad" data-act="reset">Reset</button>' +
       "</div></div></div>";
   }
-  function bindItemRows() {
+  function bindItemRows(rerender) {
+    var rr = rerender || renderLearn;
     on(".item-row", "click", function () { this.parentNode.classList.toggle("open"); });
     on(".item-actions .btn", "click", function (e) {
       e.stopPropagation();
@@ -231,7 +243,7 @@
       else if (act === "park") { p.parked = !p.parked; save(); }
       else if (act === "reset") { p.mastery = 0; p.parked = false; p.due = ""; save(); }
       else if (act === "drill") { startQuiz([id]); return; }
-      renderLearn();
+      rr();
     });
   }
 
@@ -353,7 +365,7 @@
     var q = [];
     ds.forEach(function (d) { d.legend.forEach(function (l) { q.push({ img: d.img, title: d.title, n: l.n, label: l.label }); }); });
     PQUIZ = { queue: shuffle(q), i: 0, revealed: false, answer: "", hit: 0, miss: 0, scope: scope };
-    if ((location.hash || "").indexOf("truck") < 0 && (location.hash || "").indexOf("diagrams") < 0) location.hash = "#/truck";
+    if ((location.hash || "").indexOf("diagrams") < 0) location.hash = "#/diagrams";
     else renderDiagrams();
   }
   function drawPictureQuiz() {
@@ -584,20 +596,162 @@
   }
 
   // =====================================================================
+  // HOME — instant single-tap flashcard landing (the funnel for new visitors)
+  // =====================================================================
+  var HOME = null;
+  function homeStart() { HOME = { queue: homeQueue(), i: 0, revealed: false, done: 0, showNext: false }; }
+  // ordered study queue with zero side-effects: due -> weak -> brand-new -> the rest.
+  function homeQueue() {
+    var seen = {}, q = [];
+    function add(list) { list.forEach(function (i) { if (!seen[i.id]) { seen[i.id] = 1; q.push(i.id); } }); }
+    var byOrder = ITEMS.slice().sort(function (a, b) { return a.order - b.order; });
+    add(byOrder.filter(function (i) { return dueOf(i.id); }));
+    add(byOrder.filter(function (i) { var m = masteryOf(i.id); return m >= 1 && m <= 2; }));
+    add(byOrder.filter(function (i) { return !S.progress[i.id]; }));
+    add(byOrder);
+    return q;
+  }
+  function renderHome() {
+    if (!HOME) homeStart();
+    if (HOME.showNext) { renderHomeNext(); return; }
+    var firstTime = Object.keys(S.progress).length === 0 && !localStorage.getItem("pretrip.seenHome");
+    var id = HOME.queue[HOME.i % HOME.queue.length];
+    var it = ITEMS.find(function (x) { return x.id === id; });
+    var sec = secById[it.section];
+    var mastered = ITEMS.filter(function (i) { return masteryOf(i.id) >= 5; }).length;
+    var streak = S.stats.streak.count;
+    var html = '<div class="home">';
+    html += '<div class="home-top"><span class="home-streak">' +
+      (streak > 0 ? "🔥 " + streak + " day" + (streak > 1 ? "s" : "") : "Start your streak") +
+      '</span><span>' + HOME.done + " practiced · " + mastered + "/" + ITEMS.length + " mastered</span></div>";
+    if (firstTime) html += '<div class="home-coach">👋 New here? Tap the card, say the answer out loud, then grade yourself. That’s the whole app — one item at a time.</div>';
+    html += '<div class="flash">';
+    html += '<div class="flash-loc">' + esc(sec.part) + " · " + esc(sec.title) + " · " + esc(it.group) + "</div>";
+    html += '<div class="flash-name">' + esc(it.name) + (it.critical ? '<span class="crit-flag">critical</span>' : "") + "</div>";
+    if (!HOME.revealed) {
+      html += '<div class="flash-hint">' + (it.conditions.length ? "Say what you check out loud — at least two conditions." : "Identify and name this item.") + "</div>";
+      html += '<button class="btn primary big" id="reveal">Tap to reveal</button>';
+    } else {
+      html += it.conditions.length
+        ? '<div class="conds">' + it.conditions.map(function (c) { return '<span class="cond">' + esc(c) + "</span>"; }).join("") + "</div>"
+        : '<p class="meta" style="margin-top:12px">Just identify and name it.</p>';
+      if (it.subchecks.length) html += '<ul class="subs">' + it.subchecks.map(function (sc) { return "<li><b>" + esc(sc.name) + "</b>" + (sc.conditions.length ? " — " + esc(sc.conditions.join(", ")) : "") + "</li>"; }).join("") + "</ul>";
+      html += '<div class="grade-row big-grade"><button class="btn good big" data-hg="nailed">✓ Got it</button><button class="btn bad big" data-hg="missed">↻ Review</button></div>';
+    }
+    html += "</div>"; // .flash
+    html += '<div class="home-alt"><button class="btn sm" id="h-skip">Skip →</button><a class="btn sm" href="#/truck">Tap-the-Truck</a><a class="btn sm" href="#/learn">Browse all</a></div>';
+    html += "</div>"; // .home
+    mount(html, function () {
+      var rv = document.getElementById("reveal");
+      if (rv) rv.addEventListener("click", function () { HOME.revealed = true; track("home_reveal"); renderHome(); });
+      on("[data-hg]", "click", function () {
+        var res = this.getAttribute("data-hg");
+        var firstEver = Object.keys(S.progress).length === 0;
+        grade(id, res);
+        track("home_grade", { result: res });
+        if (firstEver) track("first_grade");
+        localStorage.setItem("pretrip.seenHome", "1");
+        HOME.done++; HOME.i++; HOME.revealed = false;
+        if (HOME.done % 4 === 0) HOME.showNext = true;
+        renderHome();
+      });
+      var sk = document.getElementById("h-skip");
+      if (sk) sk.addEventListener("click", function () { HOME.i++; HOME.revealed = false; renderHome(); });
+    });
+  }
+  function renderHomeNext() {
+    var mastered = ITEMS.filter(function (i) { return masteryOf(i.id) >= 5; }).length;
+    var streak = S.stats.streak.count;
+    var html = '<div class="home"><div class="home-mile">';
+    html += '<div class="mile-badge">🔥 ' + streak + "</div>";
+    html += "<h1>" + HOME.done + " items practiced</h1>";
+    html += '<p class="meta">' + mastered + " of " + ITEMS.length + " mastered. Keep the momentum, or switch it up.</p>";
+    html += '<div class="row" style="justify-content:center;margin-top:16px">';
+    html += '<button class="btn primary" id="cont">Keep practicing</button>';
+    html += '<a class="btn" href="#/truck" data-na="truck">Tap-the-Truck</a>';
+    html += '<a class="btn" href="#/walk" data-na="walk">Full walk-around</a>';
+    html += "</div></div></div>";
+    mount(html, function () {
+      document.getElementById("cont").addEventListener("click", function () { HOME.showNext = false; renderHome(); });
+      on("[data-na]", "click", function () { track("next_action_click", { to: this.getAttribute("data-na") }); });
+    });
+  }
+
+  // =====================================================================
+  // TAP-THE-TRUCK — interactive walk-around map (truckmap.js + truck-map.svg)
+  // =====================================================================
+  var TMSEL = null;
+  function renderTruckMap() {
+    if (TMSEL) { renderTruckZone(TMSEL); return; }
+    var map = window.PRETRIP_TRUCKMAP || { svg: "img/diagrams/truck-map.svg", zones: [] };
+    var html = '<div class="page-head"><h1>Tap the truck</h1><p>Walk the rig the way the examiner will. Tap any area to study its items — each zone is shaded by how much you’ve mastered.</p></div>';
+    html += '<div class="truckwrap" id="truckwrap"><div class="truck-loading meta">Loading diagram…</div></div>';
+    html += '<div class="row" style="margin-top:10px"><a class="btn sm" href="#/diagrams">Picture dictionary</a><a class="btn sm" href="#/walk">Full walk-around</a></div>';
+    mount(html, function () {
+      var wrap = document.getElementById("truckwrap");
+      fetch(map.svg).then(function (r) { return r.text(); }).then(function (svg) {
+        wrap.innerHTML = svg;
+        map.zones.forEach(function (z) {
+          var g = wrap.querySelector("#zone-" + z.id); if (!g) return;
+          var pct = sectionPct(z.section);
+          var rect = g.querySelector("rect"); if (rect) rect.setAttribute("fill-opacity", (0.10 + 0.006 * pct).toFixed(3));
+          var pctEl = g.querySelector(".zpct"); if (pctEl) pctEl.textContent = pct + "%";
+          function open() { track("truckzone_tap", { zone: z.id }); TMSEL = z.section; renderTruckZone(z.section); }
+          g.addEventListener("click", open);
+          g.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
+        });
+      }).catch(function () {
+        wrap.innerHTML = '<p class="empty">Couldn’t load the truck diagram. <a href="#/learn">Browse all items</a> instead.</p>';
+      });
+    });
+  }
+  function renderTruckZone(sid) {
+    var s = secById[sid];
+    var all = ITEMS.filter(function (i) { return i.section === sid; }).sort(function (a, b) { return a.order - b.order; });
+    var mastered = all.filter(function (i) { return masteryOf(i.id) >= 5; }).length;
+    var pct = all.length ? Math.round((mastered / all.length) * 100) : 0;
+    var html = '<div class="row" style="margin:10px 0 4px"><button class="btn sm" id="tm-back">← Truck map</button></div>';
+    html += '<div class="sec"><div class="sec-head"><span class="part-tag">' + esc(s.part) + '</span><h2>' + esc(s.title) + '</h2><span class="count">' + mastered + "/" + all.length + " mastered</span></div>";
+    html += '<div class="bar"><i style="width:' + pct + '%"></i></div>';
+    var diags = diagramsBySection[sid] || [];
+    if (diags.length) {
+      html += '<div class="diag-strip">' + diags.map(function (d) {
+        return '<span class="diag-chip" data-diag="' + d.id + '"><img src="' + d.img + '" alt=""> ' + esc(d.title) + "</span>";
+      }).join("") + "</div>";
+    }
+    html += '<div class="row" style="margin:8px 0 14px"><button class="btn primary" id="tm-drill">Drill this area</button><button class="btn" id="tm-walk">Walk this area</button></div>';
+    var curGroup = null;
+    all.forEach(function (i) {
+      if (i.group !== curGroup) { curGroup = i.group; html += '<div class="grp-label">' + esc(i.group) + "</div>"; }
+      html += itemRow(i);
+    });
+    html += "</div>";
+    mount(html, function () {
+      document.getElementById("tm-back").addEventListener("click", function () { TMSEL = null; renderTruckMap(); });
+      document.getElementById("tm-drill").addEventListener("click", function () { TMSEL = null; startQuiz(sid); });
+      document.getElementById("tm-walk").addEventListener("click", function () { TMSEL = null; startRun("walk", sid); });
+      on(".diag-chip", "click", function () { openLightbox(this.getAttribute("data-diag")); });
+      bindItemRows(function () { renderTruckZone(sid); });
+    });
+  }
+
+  // =====================================================================
   // ROUTER
   // =====================================================================
-  var ROUTES = { truck: renderDiagrams, diagrams: renderDiagrams, learn: renderLearn, quiz: renderQuiz, walk: renderWalk, examiner: renderExaminer, progress: renderProgress };
+  var ROUTES = { home: renderHome, truck: renderTruckMap, diagrams: renderDiagrams, learn: renderLearn, quiz: renderQuiz, walk: renderWalk, examiner: renderExaminer, progress: renderProgress };
   function route() {
     if (TIMER && !(RUN && (location.hash.indexOf("walk") >= 0 || location.hash.indexOf("examiner") >= 0))) endRun();
-    var name = (location.hash.replace(/^#\//, "") || "truck").split("/")[0];
-    if (!ROUTES[name]) name = "truck";
+    var name = (location.hash.replace(/^#\//, "") || "home").split("/")[0];
+    if (!ROUTES[name]) name = "home";
+    if (name !== "truck") TMSEL = null; // leaving the map resets to the overview
     document.querySelectorAll("#nav a").forEach(function (a) { a.classList.toggle("active", a.getAttribute("data-route") === name); });
+    track("mode_enter", { mode: name });
     ROUTES[name]();
   }
   window.addEventListener("hashchange", route);
 
   // ---------- boot ----------------------------------------------------------
   document.getElementById("foot-count").textContent = ITEMS.length + " items · 6 sections";
-  if (!location.hash) location.hash = "#/truck";
+  if (!location.hash) location.hash = "#/home";
   route();
 })();

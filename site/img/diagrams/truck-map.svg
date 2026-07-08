@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 380" role="img" aria-label="Interactive tractor-trailer walk-around map">
+  <!-- line art (theme-aware: inherits currentColor from the page) -->
+  <g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" opacity="0.85">
+    <!-- ground -->
+    <line x1="12" y1="300" x2="988" y2="300" stroke-width="2"/>
+    <!-- tractor hood -->
+    <path d="M40 300 V206 L150 188 V300"/>
+    <!-- cab -->
+    <path d="M150 300 V95 H262 V300"/>
+    <rect x="164" y="110" width="84" height="72" rx="4"/>
+    <!-- exhaust stack -->
+    <line x1="266" y1="96" x2="266" y2="150"/>
+    <!-- tractor frame + fifth wheel -->
+    <line x1="150" y1="270" x2="404" y2="270"/>
+    <path d="M316 270 L392 270 L380 252 L328 252 Z"/>
+    <!-- kingpin plate under trailer nose -->
+    <line x1="360" y1="255" x2="404" y2="255"/>
+    <!-- trailer body -->
+    <rect x="360" y="120" width="600" height="140" rx="4"/>
+    <!-- landing gear -->
+    <line x1="470" y1="260" x2="470" y2="300"/>
+    <line x1="486" y1="260" x2="486" y2="300"/>
+    <line x1="466" y1="300" x2="490" y2="300"/>
+    <!-- ICC bumper -->
+    <line x1="960" y1="260" x2="960" y2="296"/>
+    <line x1="936" y1="296" x2="964" y2="296"/>
+    <!-- wheels -->
+    <g>
+      <circle cx="95" cy="300" r="30"/><circle cx="95" cy="300" r="11"/>
+      <circle cx="298" cy="300" r="30"/><circle cx="298" cy="300" r="11"/>
+      <circle cx="360" cy="300" r="30"/><circle cx="360" cy="300" r="11"/>
+      <circle cx="820" cy="300" r="30"/><circle cx="820" cy="300" r="11"/>
+      <circle cx="882" cy="300" r="30"/><circle cx="882" cy="300" r="11"/>
+    </g>
+  </g>
+
+  <!-- tappable zones (fill/opacity + % set by app.js); bands laid out to not overlap -->
+  <g font-family="'Space Grotesk',system-ui,sans-serif" text-anchor="middle">
+    <g class="zone" id="zone-part-c" data-zone="part-c" tabindex="0" role="button" aria-label="Trailer">
+      <rect x="456" y="112" width="510" height="218" rx="12" fill="#1da46c" fill-opacity="0.12" stroke="#1da46c" stroke-opacity="0.55" stroke-width="1.5"/>
+      <text class="zlabel" x="711" y="214" font-size="17" font-weight="600" fill="currentColor">Trailer</text>
+      <text class="zpct" x="711" y="236" font-size="13" fill="currentColor" opacity="0.7">0%</text>
+    </g>
+    <g class="zone" id="zone-part-a" data-zone="part-a" tabindex="0" role="button" aria-label="Front and engine">
+      <rect x="26" y="178" width="130" height="152" rx="12" fill="#1da46c" fill-opacity="0.12" stroke="#1da46c" stroke-opacity="0.55" stroke-width="1.5"/>
+      <text class="zlabel" x="91" y="248" font-size="14" font-weight="600" fill="currentColor">Front &amp;</text>
+      <text class="zlabel" x="91" y="266" font-size="14" font-weight="600" fill="currentColor">Engine</text>
+      <text class="zpct" x="91" y="286" font-size="12" fill="currentColor" opacity="0.7">0%</text>
+    </g>
+    <g class="zone" id="zone-in-cab" data-zone="in-cab" tabindex="0" role="button" aria-label="In-cab">
+      <rect x="162" y="95" width="100" height="88" rx="10" fill="#1da46c" fill-opacity="0.12" stroke="#1da46c" stroke-opacity="0.55" stroke-width="1.5"/>
+      <text class="zlabel" x="212" y="134" font-size="13" font-weight="600" fill="currentColor">In-Cab</text>
+      <text class="zpct" x="212" y="152" font-size="11" fill="currentColor" opacity="0.7">0%</text>
+    </g>
+    <g class="zone" id="zone-part-b" data-zone="part-b" tabindex="0" role="button" aria-label="Tractor sides and drive axles">
+      <rect x="266" y="188" width="86" height="142" rx="12" fill="#1da46c" fill-opacity="0.12" stroke="#1da46c" stroke-opacity="0.55" stroke-width="1.5"/>
+      <text class="zlabel" x="309" y="228" font-size="13" font-weight="600" fill="currentColor">Tractor</text>
+      <text class="zlabel" x="309" y="245" font-size="13" font-weight="600" fill="currentColor">Sides</text>
+      <text class="zpct" x="309" y="264" font-size="11" fill="currentColor" opacity="0.7">0%</text>
+    </g>
+    <g class="zone" id="zone-coupling" data-zone="coupling" tabindex="0" role="button" aria-label="Coupling system">
+      <rect x="358" y="226" width="92" height="74" rx="10" fill="#1da46c" fill-opacity="0.12" stroke="#1da46c" stroke-opacity="0.55" stroke-width="1.5"/>
+      <text class="zlabel" x="404" y="258" font-size="12" font-weight="600" fill="currentColor">Coupling</text>
+      <text class="zpct" x="404" y="276" font-size="11" fill="currentColor" opacity="0.7">0%</text>
+    </g>
+    <g class="zone" id="zone-air-brake" data-zone="air-brake" tabindex="0" role="button" aria-label="Air brake test">
+      <rect x="470" y="40" width="230" height="46" rx="23" fill="#1da46c" fill-opacity="0.12" stroke="#1da46c" stroke-opacity="0.55" stroke-width="1.5"/>
+      <text class="zlabel" x="585" y="63" font-size="13.5" font-weight="600" fill="currentColor">Air Brake Test</text>
+      <text class="zpct" x="585" y="79" font-size="11" fill="currentColor" opacity="0.7">0%</text>
+    </g>
+  </g>
+</svg>

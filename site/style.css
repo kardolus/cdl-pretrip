@@ -109,8 +109,8 @@ html.dark .chip.on{color:#0d1117}
 .dot.m4{background:#3b82f6}
 .dot.m5{background:var(--good)}
 .item-name{font-family:var(--font-ui);font-weight:600;font-size:14.5px;flex:1;min-width:0}
-.item-name .crit-flag{font-family:var(--font-mono);font-size:9px;color:var(--warn);border:1px solid var(--warn);
-  border-radius:4px;padding:0 4px;margin-left:7px;vertical-align:middle;text-transform:uppercase;letter-spacing:.05em}
+.crit-flag{font-family:var(--font-mono);font-size:9px;color:var(--warn);border:1px solid var(--warn);
+  border-radius:4px;padding:1px 5px;margin-left:8px;vertical-align:middle;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
 .item-row .caret{color:var(--meta);font-size:12px;transition:transform .15s}
 .item.open .caret{transform:rotate(90deg)}
 .item-body{display:none;padding:0 14px 14px;border-top:1px solid var(--border)}
@@ -239,5 +239,50 @@ html.dark .legend .num{color:#0d1117}
 /* footer */
 .foot{margin-top:40px;padding-top:20px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;
   gap:14px;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--meta)}
+
+/* ===== instant landing (home) ===== */
+.home{max-width:600px;margin:0 auto}
+.home-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+  margin:16px 0 8px;font-family:var(--font-mono);font-size:12px;color:var(--meta)}
+.home-streak{color:var(--accent);font-weight:600}
+.home-coach{background:var(--accent-soft);border:1px solid var(--accent);border-radius:var(--radius-md);
+  padding:12px 15px;font-size:13.5px;margin:8px 0 14px;line-height:1.5}
+.flash{border:1px solid var(--border-strong);border-radius:var(--radius-lg);background:var(--card);
+  padding:30px 26px;margin:6px 0;min-height:236px;display:flex;flex-direction:column;justify-content:center}
+.flash-loc{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent)}
+.flash-name{font-family:var(--font-ui);font-weight:700;font-size:30px;letter-spacing:-.02em;margin:10px 0 6px;line-height:1.15}
+.flash-hint{color:var(--meta);font-size:14px;margin-bottom:22px}
+.flash .conds{margin-top:8px}
+.btn.big{padding:14px 22px;font-size:16px;border-radius:var(--radius-md)}
+.flash .btn.big{align-self:flex-start}
+.big-grade{margin-top:24px}
+.big-grade .btn{flex:1;justify-content:center;min-width:130px;min-height:52px}
+.home-alt{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+.home-mile{text-align:center;max-width:520px;margin:44px auto;padding:32px 24px;border:1px solid var(--border-strong);
+  border-radius:var(--radius-lg);background:var(--card)}
+.home-mile h1{font-size:26px;margin-top:8px}
+.mile-badge{font-family:var(--font-ui);font-weight:700;font-size:42px;color:var(--accent);line-height:1}
+
+/* ===== tap-the-truck map ===== */
+.truckwrap{border:1px solid var(--border);border-radius:var(--radius-md);background:var(--card);
+  padding:14px;margin:10px 0;min-height:180px;display:grid;place-items:center;color:var(--fg)}
+.truckwrap svg{width:100%;height:auto;max-height:54vh}
+.truck-loading{padding:44px}
+.zone{cursor:pointer;transition:filter .15s}
+.zone:hover rect,.zone:focus-visible rect{stroke-width:3;fill-opacity:.28!important}
+.zone:focus{outline:none}
+
+/* ===== mobile polish ===== */
+/* right-edge fade so the scrollable nav reads as scrollable */
+@media(max-width:680px){
+  .top-bar{position:relative}
+  .top-bar::after{content:"";position:absolute;right:0;bottom:0;width:30px;height:40px;pointer-events:none;
+    background:linear-gradient(90deg,transparent,var(--bg))}
+  .btn{padding:9px 15px}
+  .btn.sm{padding:7px 12px}
+  .grade-row .btn{min-height:44px}
+  .flash-name{font-size:26px}
+}
+@media(max-width:420px){.diag-gallery{grid-template-columns:1fr}}
 
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
