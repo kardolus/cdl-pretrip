@@ -794,7 +794,9 @@
   // =====================================================================
   // Home is now the Tap-the-Truck map; the old instant-flashcard (renderHome) is retired
   // (unreachable — quick single-tap practice lives in the Quiz hub + the "Practice now" CTA).
-  var ROUTES = { home: renderTruckMap, truck: renderTruckMap, diagrams: renderDiagrams, learn: renderLearn, quiz: renderQuiz, walk: renderWalk, examiner: renderExaminer, progress: renderProgress };
+  // Examiner dropped (its self-graded run overlapped the Quiz walk-around card). The shared
+  // runner + renderExaminer remain in the file but are unreachable (no nav entry / route).
+  var ROUTES = { home: renderTruckMap, truck: renderTruckMap, diagrams: renderDiagrams, learn: renderLearn, quiz: renderQuiz, walk: renderWalk, progress: renderProgress };
   // the floating "Quiz me" button is hidden inside a quiz/run so it never overlaps the action
   function updateFab(name) {
     var f = document.getElementById("fab"); if (!f) return;
