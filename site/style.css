@@ -244,6 +244,7 @@ html.dark .legend .num{color:#0d1117}
 /* footer */
 .foot{margin-top:40px;padding-top:20px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;
   gap:14px;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--meta)}
+.foot-mark{color:var(--accent);vertical-align:-1px;margin:0 4px 0 2px}
 
 /* ===== instant landing (home) ===== */
 .home{max-width:600px;margin:0 auto}
